@@ -1,6 +1,6 @@
 import { ICommonObject, INode, INodeData, INodeOutputsValue, INodeParams } from '../../../src/Interface'
 import { getBaseClasses, getCredentialData, getCredentialParam } from '../../../src/utils'
-import { VectaraStore, VectaraLibArgs, VectaraFilter } from 'langchain/vectorstores/vectara'
+import { VectaraStore, VectaraLibArgs, VectaraFilter, VectaraContextConfig } from 'langchain/vectorstores/vectara'
 
 class VectaraExisting_VectorStores implements INode {
     label: string
@@ -34,13 +34,33 @@ class VectaraExisting_VectorStores implements INode {
             {
                 label: 'Vectara Metadata Filter',
                 name: 'filter',
-                type: 'json',
+                description:
+                    'Filter to apply to Vectara metadata. Refer to the <a target="_blank" href="https://docs.flowiseai.com/vector-stores/vectara">documentation</a> on how to use Vectara filters with Flowise.',
+                type: 'string',
+                additionalParams: true,
+                optional: true
+            },
+            {
+                label: 'Sentences Before',
+                name: 'sentencesBefore',
+                description: 'Number of sentences to fetch before the matched sentence. Defaults to 2.',
+                type: 'number',
+                additionalParams: true,
+                optional: true
+            },
+            {
+                label: 'Sentences After',
+                name: 'sentencesAfter',
+                description: 'Number of sentences to fetch after the matched sentence. Defaults to 2.',
+                type: 'number',
                 additionalParams: true,
                 optional: true
             },
             {
                 label: 'Lambda',
                 name: 'lambda',
+                description:
+                    'Improves retrieval accuracy by adjusting the balance (from 0 to 1) between neural search and keyword-based search factors.',
                 type: 'number',
                 additionalParams: true,
                 optional: true
@@ -74,7 +94,9 @@ class VectaraExisting_VectorStores implements INode {
         const customerId = getCredentialParam('customerID', credentialData, nodeData)
         const corpusId = getCredentialParam('corpusID', credentialData, nodeData)
 
-        const vectaraMetadatafilter = nodeData.inputs?.filter as VectaraFilter
+        const vectaraMetadataFilter = nodeData.inputs?.filter as string
+        const sentencesBefore = nodeData.inputs?.sentencesBefore as number
+        const sentencesAfter = nodeData.inputs?.sentencesAfter as number
         const lambda = nodeData.inputs?.lambda as number
         const output = nodeData.outputs?.output as string
         const topK = nodeData.inputs?.topK as string
@@ -87,13 +109,13 @@ class VectaraExisting_VectorStores implements INode {
         }
 
         const vectaraFilter: VectaraFilter = {}
-
-        if (vectaraMetadatafilter) {
-            const metadatafilter = typeof vectaraMetadatafilter === 'object' ? vectaraMetadatafilter : JSON.parse(vectaraMetadatafilter)
-            vectaraFilter.filter = metadatafilter
-        }
-
+        if (vectaraMetadataFilter) vectaraFilter.filter = vectaraMetadataFilter
         if (lambda) vectaraFilter.lambda = lambda
+
+        const vectaraContextConfig: VectaraContextConfig = {}
+        if (sentencesBefore) vectaraContextConfig.sentencesBefore = sentencesBefore
+        if (sentencesAfter) vectaraContextConfig.sentencesAfter = sentencesAfter
+        vectaraFilter.contextConfig = vectaraContextConfig
 
         const vectorStore = new VectaraStore(vectaraArgs)
 

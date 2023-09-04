@@ -50,7 +50,7 @@ class ZepMemory_Memory implements INode {
                 label: 'Session Id',
                 name: 'sessionId',
                 type: 'string',
-                description: 'if empty, chatId will be used automatically',
+                description: 'If not specified, the first CHAT_MESSAGE_ID will be used as sessionId',
                 default: '',
                 additionalParams: true,
                 optional: true
@@ -120,7 +120,8 @@ class ZepMemory_Memory implements INode {
         zep.loadMemoryVariables = async (values) => {
             let data = await tmpFunc.bind(zep, values)()
             if (autoSummary && zep.returnMessages && data[zep.memoryKey] && data[zep.memoryKey].length) {
-                const memory = await zep.zepClient.getMemory(zep.sessionId, parseInt(k, 10) ?? 10)
+                const zepClient = await zep.zepClientPromise
+                const memory = await zepClient.memory.getMemory(zep.sessionId, parseInt(k, 10) ?? 10)
                 if (memory?.summary) {
                     let summary = autoSummaryTemplate.replace(/{summary}/g, memory.summary.content)
                     // eslint-disable-next-line no-console
@@ -156,13 +157,15 @@ const initalizeZep = async (nodeData: INodeData, options: ICommonObject): Promis
     const memoryKey = nodeData.inputs?.memoryKey as string
     const inputKey = nodeData.inputs?.inputKey as string
     const sessionId = nodeData.inputs?.sessionId as string
-
     const chatId = options?.chatId as string
+
+    let isSessionIdUsingChatMessageId = false
+    if (!sessionId && chatId) isSessionIdUsingChatMessageId = true
 
     const credentialData = await getCredentialData(nodeData.credential ?? '', options)
     const apiKey = getCredentialParam('apiKey', credentialData, nodeData)
 
-    const obj: ZepMemoryInput = {
+    const obj: ZepMemoryInput & Partial<ZepMemoryExtendedInput> = {
         baseURL,
         sessionId: sessionId ? sessionId : chatId,
         aiPrefix,
@@ -172,8 +175,22 @@ const initalizeZep = async (nodeData: INodeData, options: ICommonObject): Promis
         inputKey
     }
     if (apiKey) obj.apiKey = apiKey
+    if (isSessionIdUsingChatMessageId) obj.isSessionIdUsingChatMessageId = true
 
-    return new ZepMemory(obj)
+    return new ZepMemoryExtended(obj)
+}
+
+interface ZepMemoryExtendedInput {
+    isSessionIdUsingChatMessageId: boolean
+}
+
+class ZepMemoryExtended extends ZepMemory {
+    isSessionIdUsingChatMessageId? = false
+
+    constructor(fields: ZepMemoryInput & Partial<ZepMemoryExtendedInput>) {
+        super(fields)
+        this.isSessionIdUsingChatMessageId = fields.isSessionIdUsingChatMessageId
+    }
 }
 
 module.exports = { nodeClass: ZepMemory_Memory }

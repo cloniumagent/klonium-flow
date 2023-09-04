@@ -64,9 +64,27 @@ export const ChatMessage = ({ open, chatflowid, isDialog }) => {
         window.open(data, '_blank')
     }
 
+    const handleVectaraMetadata = (message) => {
+        if (message.sourceDocuments && message.sourceDocuments[0].metadata.length)
+            message.sourceDocuments = message.sourceDocuments.map((docs) => {
+                const newMetadata = docs.metadata.reduce((newMetadata, metadata) => {
+                    newMetadata[metadata.name] = metadata.value
+                    return newMetadata
+                }, {})
+                return {
+                    pageContent: docs.pageContent,
+                    metadata: newMetadata
+                }
+            })
+        return message
+    }
+
     const removeDuplicateURL = (message) => {
         const visitedURLs = []
         const newSourceDocuments = []
+
+        message = handleVectaraMetadata(message)
+
         message.sourceDocuments.forEach((source) => {
             if (isValidURL(source.metadata.source) && !visitedURLs.includes(source.metadata.source)) {
                 visitedURLs.push(source.metadata.source)
@@ -154,7 +172,10 @@ export const ChatMessage = ({ open, chatflowid, isDialog }) => {
             const response = await predictionApi.sendMessageAndGetPrediction(chatflowid, params)
 
             if (response.data) {
-                const data = response.data
+                let data = response.data
+
+                data = handleVectaraMetadata(data)
+
                 if (typeof data === 'object' && data.text && data.sourceDocuments) {
                     if (!isChatFlowAvailableToStream) {
                         setMessages((prevMessages) => [
@@ -346,7 +367,9 @@ export const ChatMessage = ({ open, chatflowid, isDialog }) => {
                                                                 key={index}
                                                                 label={
                                                                     URL
-                                                                        ? `${URL.pathname.substring(0, 15)}...`
+                                                                        ? URL.pathname.substring(0, 15) === '/'
+                                                                            ? URL.host
+                                                                            : `${URL.pathname.substring(0, 15)}...`
                                                                         : `${source.pageContent.substring(0, 15)}...`
                                                                 }
                                                                 component='a'
