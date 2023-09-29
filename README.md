@@ -1,7 +1,21 @@
 <!-- markdownlint-disable MD030 -->
 This is a fork of https://github.com/FlowiseAI/Flowise
 
+<<<<<<< HEAD
 # Build LLM Apps Easily
+=======
+<img width="100%" src="https://github.com/FlowiseAI/Flowise/blob/main/images/flowise.png?raw=true"></a>
+
+# Flowise - Build LLM Apps Easily
+
+[![Release Notes](https://img.shields.io/github/release/FlowiseAI/Flowise)](https://github.com/FlowiseAI/Flowise/releases)
+[![Discord](https://img.shields.io/discord/1087698854775881778?label=Discord&logo=discord)](https://discord.gg/jbaHfsRVBW)
+[![Twitter Follow](https://img.shields.io/twitter/follow/FlowiseAI?style=social)](https://twitter.com/FlowiseAI)
+[![GitHub star chart](https://img.shields.io/github/stars/FlowiseAI/Flowise?style=social)](https://star-history.com/#FlowiseAI/Flowise)
+[![GitHub fork](https://img.shields.io/github/forks/FlowiseAI/Flowise?style=social)](https://github.com/FlowiseAI/Flowise/fork)
+
+English | [中文](./README-ZH.md)
+>>>>>>> 5574e82a029307a9926ebdc584d90dd500f1dc7b
 
 <h3>Drag & drop UI to build your customized LLM flow</h3>
 
@@ -133,4 +147,4 @@ Look at the original project documentation:
 
 ## 📄 License
 
-Source code in this repository is made available under the [MIT License](LICENSE.md).
+Source code in this repository is made available under the [Apache License Version 2.0](LICENSE.md).
